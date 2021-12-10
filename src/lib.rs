@@ -17,10 +17,39 @@ pub enum Cell {
 }
 
 #[wasm_bindgen]
+pub struct Block {
+    coords: [(u32, u32); 4],
+    prev_coords: [(u32, u32); 4],
+}
+
+#[wasm_bindgen]
+impl Block {
+    pub fn move_left(&mut self) {
+        for index in 0..=3 {
+            self.prev_coords[index] = self.coords[index];
+            self.coords[index] = (self.coords[index].0, self.coords[index].1 - 1);
+        }
+    }
+    pub fn move_right(&mut self) {
+        for index in 0..=3 {
+            self.prev_coords[index] = self.coords[index];
+            self.coords[index] = (self.coords[index].0, self.coords[index].1 + 1);
+        }
+    }
+    pub fn move_down(&mut self) {
+        for index in 0..=3 {
+            self.prev_coords[index] = self.coords[index];
+            self.coords[index] = (self.coords[index].0 + 1, self.coords[index].1);
+        }
+    }
+}
+
+#[wasm_bindgen]
 pub struct Board {
     width: u32,
     height: u32,
     cells: Vec<Cell>,
+    block: Block,
 }
 
 impl Board {
@@ -32,9 +61,22 @@ impl Board {
 #[wasm_bindgen]
 impl Board {
     pub fn tick(&mut self) {
-        let mut next = self.cells.clone();
+        //move block down by one
+        self.block.move_down();
 
-        // move the piece down
+        self.update_cells()
+    }
+
+    pub fn update_cells(&mut self) {
+        let mut next = self.cells.clone();
+        for coord in self.block.prev_coords {
+            let index = self.get_index(coord.0, coord.1);
+            next[index] = Cell::Off;
+        }
+        for coord in self.block.coords {
+            let index = self.get_index(coord.0, coord.1);
+            next[index] = Cell::On;
+        }
 
         self.cells = next;
     }
@@ -43,10 +85,15 @@ impl Board {
         let width = 10;
         let height = 20;
 
+        let block = Block {
+            coords: [(4, 4), (4, 5), (4, 6), (4, 7)],
+            prev_coords: [(4, 4), (4, 5), (4, 6), (4, 7)],
+        };
+
         let cells = (0..width * height)
             .map(|i| {
                 if i % 2 == 0 || i % 7 == 0 {
-                    Cell::On
+                    Cell::Off
                 } else {
                     Cell::Off
                 }
@@ -57,6 +104,7 @@ impl Board {
             width,
             height,
             cells,
+            block,
         }
     }
 
@@ -70,5 +118,12 @@ impl Board {
 
     pub fn cells(&self) -> *const Cell {
         self.cells.as_ptr()
+    }
+
+    pub fn move_block_left(&mut self) {
+        self.block.move_left();
+    }
+    pub fn move_block_right(&mut self) {
+        self.block.move_right();
     }
 }
