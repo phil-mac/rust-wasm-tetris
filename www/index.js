@@ -1,5 +1,5 @@
-import { Board, Cell } from "rust-wasm-tetris";
-import { memory } from "rust-wasm-tetris/rust_wasm_tetris_bg";
+import { Board, Cell } from "rust-wasm-tetris-phil-mac";
+import { memory } from "rust-wasm-tetris-phil-mac/rust_wasm_tetris_phil_mac_bg";
 
 const log = content => console.log(content);
 
