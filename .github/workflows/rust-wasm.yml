@@ -36,5 +36,4 @@ jobs:
       - run: wasm-pack test --headless --firefox
 
       - run: wasm-pack build
-      - run: cd www && npm install && npm test
-      - run: npm run build
+      - run: cd www && npm install && npm run build
