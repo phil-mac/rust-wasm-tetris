@@ -39,8 +39,7 @@ jobs:
       - run: mkdir -p docs
       - run: rm -rf ./docs/*
       - run: wasm-pack build
-      - run: cd www && npm install
-      - run: npm run build
+      - run: cd www && npm install && npm run build
       - run: mv ./dist/* ../docs
 
       # - run: cargo test
