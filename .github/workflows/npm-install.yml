@@ -5,4 +5,4 @@ jobs:
     runs-on: ubuntu-latest
     name: Build and test
     steps:
-      - uses: cd www && npm install && npm run build
+      - run: cd www && npm install && npm run build
