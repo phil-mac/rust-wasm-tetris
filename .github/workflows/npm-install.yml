@@ -1,9 +1,9 @@
-name: main
-on: [push]
-jobs:
-  build-and-test:
-    runs-on: ubuntu-latest
-    name: Build and test
-    steps:
-      - run: ls
-      - run: cd www && npm install && npm run build
+# name: main
+# on: [push]
+# jobs:
+#   build-and-test:
+#     runs-on: ubuntu-latest
+#     name: Build and test
+#     steps:
+#       - run: ls
+#       - run: cd www && npm install && npm run build
