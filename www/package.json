@@ -27,7 +27,7 @@
   },
   "homepage": "https://github.com/rustwasm/create-wasm-app#readme",
   "dependencies": {
-    "rust-wasm-tetris-phil-mac": "^0.1.0"
+    "rust-wasm-tetris-phil-mac": "file:../pkg"
   },
   "devDependencies": {
     "hello-wasm-pack": "^0.1.0",

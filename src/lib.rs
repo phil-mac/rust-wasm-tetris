@@ -57,11 +57,11 @@ fn down(coord: Coord) -> Coord {
 
 fn starting_coords() -> [Coord; 5] {
     [
-        Coord { x: 4, y: 4 },
-        Coord { x: 5, y: 4 },
-        Coord { x: 6, y: 4 },
-        Coord { x: 7, y: 4 },
-        Coord { x: 8, y: 4 },
+        Coord { x: 4, y: 1 },
+        Coord { x: 5, y: 1 },
+        Coord { x: 6, y: 1 },
+        Coord { x: 7, y: 1 },
+        Coord { x: 8, y: 1 },
     ]
 }
 
@@ -100,6 +100,7 @@ pub struct Board {
     height: u32,
     cells: Vec<Cell>,
     block: Block,
+    is_stuck: bool,
 }
 
 impl Board {
@@ -198,7 +199,17 @@ impl Board {
 #[wasm_bindgen]
 impl Board {
     pub fn tick(&mut self) {
-        self.attempt_move_block_down();
+        if self.is_stuck {
+            self.is_stuck = false;
+            self.update_cells();
+            return;
+        }
+
+        self.is_stuck = !self.attempt_move_block_down();
+
+        if self.is_stuck {
+            self.on_stick();
+        }
     }
 
     pub fn update_cells(&mut self) {
@@ -237,13 +248,13 @@ impl Board {
             .collect();
 
         log!("testing 1 2 3");
-
         Board {
             line_count,
             width,
             height,
             cells,
             block,
+            is_stuck: true,
         }
     }
 
@@ -263,12 +274,8 @@ impl Board {
         self.line_count
     }
 
-    pub fn attempt_move_block_down(&mut self) {
-        let is_stuck = !self.attempt_move(self.block.translation(down));
-
-        if is_stuck {
-            self.on_stick();
-        }
+    pub fn attempt_move_block_down(&mut self) -> bool {
+        self.attempt_move(self.block.translation(down))
     }
     pub fn attempt_move_block_left(&mut self) {
         self.attempt_move(self.block.translation(left));
