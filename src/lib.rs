@@ -1,4 +1,10 @@
+mod block;
+mod cell;
+mod coord;
 mod utils;
+use block::Block;
+use cell::Cell;
+use coord::Coord;
 
 use wasm_bindgen::prelude::*;
 
@@ -14,26 +20,6 @@ macro_rules! log {
     ( $( $t:tt )* ) => {
         web_sys::console::log_1(&format!( $( $t )* ).into());
     }
-}
-
-#[wasm_bindgen]
-#[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Cell {
-    Off = 0,
-    On = 1,
-}
-
-#[derive(Copy, Clone)]
-pub struct Coord {
-    x: u32,
-    y: u32,
-}
-
-#[wasm_bindgen]
-pub struct Block {
-    coords: [Coord; 5],
-    prev_coords: [Coord; 5],
 }
 
 fn left(coord: Coord) -> Coord {
@@ -55,44 +41,6 @@ fn down(coord: Coord) -> Coord {
     }
 }
 
-fn starting_coords() -> [Coord; 5] {
-    [
-        Coord { x: 4, y: 1 },
-        Coord { x: 5, y: 1 },
-        Coord { x: 6, y: 1 },
-        Coord { x: 7, y: 1 },
-        Coord { x: 8, y: 1 },
-    ]
-}
-
-impl Block {
-    fn translation(&self, direction: fn(Coord) -> Coord) -> [Coord; 5] {
-        let mut new_coords = starting_coords();
-        for index in 0..=4 {
-            new_coords[index] = direction(self.coords[index]);
-        }
-        new_coords
-    }
-
-    fn rotation(&self) -> [Coord; 5] {
-        let mut new_coords = starting_coords();
-
-        let x_pivot = self.coords[0].x;
-        let y_pivot = self.coords[0].y;
-
-        for index in 0..=4 {
-            let x_delta = self.coords[index].x - x_pivot;
-            let y_delta = self.coords[index].y - y_pivot;
-
-            new_coords[index] = Coord {
-                x: y_delta + x_pivot,
-                y: x_delta + y_pivot,
-            }
-        }
-        new_coords
-    }
-}
-
 #[wasm_bindgen]
 pub struct Board {
     line_count: u32,
@@ -101,6 +49,7 @@ pub struct Board {
     cells: Vec<Cell>,
     block: Block,
     is_stuck: bool,
+    is_game_over: bool,
 }
 
 impl Board {
@@ -108,14 +57,14 @@ impl Board {
         ((coord.y - 1) * self.width + (coord.x - 1)) as usize
     }
 
-    fn drop_new_block(&mut self) {
-        self.block.coords = starting_coords();
-        self.block.prev_coords = starting_coords();
-    }
+    // fn drop_new_block(&mut self) {
+    //     self.block.coords = starting_coords();
+    //     self.block.prev_coords = starting_coords();
+    // }
 
     // aka (if there are any On's in it, or out of bounds - skipping checks of current coords)
-    fn is_position_allowed(&self, new_position: [Coord; 5]) -> bool {
-        for index in 0..=4 {
+    fn is_position_allowed(&self, new_position: [Coord; 4]) -> bool {
+        for index in 0..=3 {
             // not allowed if position out of bounds
             let x = new_position[index].x;
             let y = new_position[index].y;
@@ -133,7 +82,7 @@ impl Board {
                     skip = true;
                 }
             }
-            if !skip && self.cells[new_position_index] == Cell::On {
+            if !skip && self.cells[new_position_index] != Cell::Off {
                 return false;
             }
         }
@@ -141,12 +90,12 @@ impl Board {
         true
     }
 
-    fn attempt_move(&mut self, new_position: [Coord; 5]) -> bool {
+    fn attempt_move(&mut self, new_position: [Coord; 4]) -> bool {
         if !self.is_position_allowed(new_position) {
             return false;
         }
 
-        for index in 0..=4 {
+        for index in 0..=3 {
             self.block.prev_coords[index] = self.block.coords[index];
             self.block.coords[index] = new_position[index];
         }
@@ -192,16 +141,41 @@ impl Board {
             }
         }
 
-        self.drop_new_block();
+        self.check_for_game_over();
+
+        self.block = Block::new();
+    }
+
+    fn check_for_game_over(&mut self) {
+        let mut is_game_over = false;
+        for coord in self.block.coords {
+            if coord.y == 1 {
+                is_game_over = true;
+            }
+        }
+
+        if is_game_over {
+            self.is_game_over = true;
+            log!("game over");
+
+            for cell in &mut self.cells {
+                *cell = Cell::Color1
+            }
+        }
     }
 }
 
 #[wasm_bindgen]
 impl Board {
     pub fn tick(&mut self) {
+        if self.is_game_over {
+            return;
+        }
+
         if self.is_stuck {
             self.is_stuck = false;
             self.update_cells();
+
             return;
         }
 
@@ -220,7 +194,7 @@ impl Board {
         }
         for coord in self.block.coords {
             let index = self.get_index(coord);
-            next[index] = Cell::On;
+            next[index] = self.block.color
         }
 
         self.cells = next;
@@ -232,22 +206,10 @@ impl Board {
         let width = 10;
         let height = 20;
 
-        let block = Block {
-            coords: starting_coords(),
-            prev_coords: starting_coords(),
-        };
+        let block = Block::new();
 
-        let cells = (0..=width * height)
-            .map(|i| {
-                if i % 2 == 0 || i % 7 == 0 {
-                    Cell::Off
-                } else {
-                    Cell::Off
-                }
-            })
-            .collect();
+        let cells = (0..=width * height).map(|_i| Cell::Off).collect();
 
-        log!("testing 1 2 3");
         Board {
             line_count,
             width,
@@ -255,6 +217,7 @@ impl Board {
             cells,
             block,
             is_stuck: true,
+            is_game_over: false,
         }
     }
 

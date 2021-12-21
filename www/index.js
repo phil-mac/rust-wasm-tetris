@@ -5,7 +5,9 @@ const log = content => console.log(content);
 
 const CELL_SIZE = 20;
 const GRID_COLOR = "#CCCCCC";
-const ON_COLOR = "#FFFFFF";
+const ON_COLOR1 = "#FF0000";
+const ON_COLOR2 = "#00FF00";
+const ON_COLOR3 = "#0000FF";
 const OFF_COLOR = "#000000";
 
 const board = Board.new();
@@ -69,10 +71,10 @@ const drawCells = () => {
   for (let row = 0; row < height; row++){
     for (let col = 0; col < width; col++){
       const idx = getIndex(row, col);
-
-      ctx.fillStyle = cells[idx] === Cell.Off
-        ? OFF_COLOR
-        : ON_COLOR;
+      ctx.fillStyle = cells[idx] === Cell.Color1 ? ON_COLOR1
+        : cells[idx] === Cell.Color2 ? ON_COLOR2
+          : cells[idx] === Cell.Color3 ? ON_COLOR3
+            : OFF_COLOR;
       
       ctx.fillRect(
         col * (CELL_SIZE + 1) + 1,
