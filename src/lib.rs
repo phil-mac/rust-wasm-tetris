@@ -20,25 +20,6 @@ macro_rules! log {
     }
 }
 
-fn left(coord: Coord) -> Coord {
-    Coord {
-        x: coord.x - 1,
-        y: coord.y,
-    }
-}
-fn right(coord: Coord) -> Coord {
-    Coord {
-        x: coord.x + 1,
-        y: coord.y,
-    }
-}
-fn down(coord: Coord) -> Coord {
-    Coord {
-        x: coord.x,
-        y: coord.y + 1,
-    }
-}
-
 #[wasm_bindgen]
 pub struct Board {
     line_count: u32,
@@ -57,24 +38,19 @@ impl Board {
 
     fn is_position_allowed(&self, new_position: [Coord; 4]) -> bool {
         for index in 0..=3 {
-            // not allowed if position out of bounds
             let x = new_position[index].x;
             let y = new_position[index].y;
             if x == 0 || x > self.width || y == 0 || y > self.height {
                 return false;
             }
-
-            // not allowed if position is already taken
             let new_position_index = self.get_index(new_position[index]);
-            // ignore coords taken up by current block position
-            // TODO - refactor
-            let mut skip = false;
+            let mut is_current_block_coord = false;
             for coord in self.block.coords {
                 if new_position_index == self.get_index(coord) {
-                    skip = true;
+                    is_current_block_coord = true;
                 }
             }
-            if !skip && self.cells[new_position_index] != Cell::Off {
+            if !is_current_block_coord && self.cells[new_position_index] != Cell::Off {
                 return false;
             }
         }
@@ -111,8 +87,6 @@ impl Board {
 
                     let index_outer = self.get_index(Coord { x: column, y: row });
                     self.cells[index_outer] = Cell::Off;
-
-                    log!("clear")
                 }
 
                 for row_above in (2..=row).rev() {
@@ -148,11 +122,10 @@ impl Board {
 
         if is_game_over {
             self.is_game_over = true;
-            log!("game over");
-
             for cell in &mut self.cells {
                 *cell = Cell::Color1
             }
+            log!("game over");
         }
     }
 }
@@ -167,7 +140,6 @@ impl Board {
         if self.is_stuck {
             self.is_stuck = false;
             self.update_cells();
-
             return;
         }
 
@@ -230,18 +202,18 @@ impl Board {
     }
 
     pub fn attempt_move_block_down(&mut self) -> bool {
-        self.attempt_move(self.block.translation(down))
+        self.attempt_move(self.block.down_translation())
     }
     pub fn attempt_move_block_left(&mut self) {
-        self.attempt_move(self.block.translation(left));
+        self.attempt_move(self.block.left_translation());
     }
     pub fn attempt_move_block_right(&mut self) {
-        self.attempt_move(self.block.translation(right));
+        self.attempt_move(self.block.right_translation());
     }
     pub fn attempt_rotate_clockwise(&mut self) {
-        self.attempt_move(self.block.rotation(true));
+        self.attempt_move(self.block.clockwise_rotation());
     }
     pub fn attempt_rotate_counterclockwise(&mut self) {
-        self.attempt_move(self.block.rotation(false));
+        self.attempt_move(self.block.counterclockwise_rotation());
     }
 }

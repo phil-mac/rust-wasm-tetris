@@ -13,26 +13,46 @@ pub struct BlockTemplate {
   color: Cell,
 }
 
-fn null_coords() -> [Coord; 4] {
-  [
-    Coord { x: 0, y: 0 },
-    Coord { x: 0, y: 0 },
-    Coord { x: 0, y: 0 },
-    Coord { x: 0, y: 1 },
-  ]
-}
-
 impl Block {
-  pub fn translation(&self, direction: fn(Coord) -> Coord) -> [Coord; 4] {
-    let mut new_coords = null_coords();
+  fn translation(&self, direction: fn(Coord) -> Coord) -> [Coord; 4] {
+    let mut new_coords = self.coords;
     for index in 0..=3 {
       new_coords[index] = direction(self.coords[index]);
     }
     new_coords
   }
 
-  pub fn rotation(&self, clockwise: bool) -> [Coord; 4] {
-    let mut new_coords = null_coords();
+  pub fn down_translation(&self) -> [Coord; 4] {
+    fn down(coord: Coord) -> Coord {
+      Coord {
+        x: coord.x,
+        y: coord.y + 1,
+      }
+    }
+    self.translation(down)
+  }
+  pub fn right_translation(&self) -> [Coord; 4] {
+    fn right(coord: Coord) -> Coord {
+      Coord {
+        x: coord.x + 1,
+        y: coord.y,
+      }
+    }
+    self.translation(right)
+  }
+  pub fn left_translation(&self) -> [Coord; 4] {
+    fn left(coord: Coord) -> Coord {
+      Coord {
+        x: coord.x - 1,
+        y: coord.y,
+      }
+    }
+
+    self.translation(left)
+  }
+
+  fn rotation(&self, clockwise: bool) -> [Coord; 4] {
+    let mut new_coords = self.coords;
 
     let x_pivot = self.coords[0].x;
     let y_pivot = self.coords[0].y;
@@ -54,6 +74,13 @@ impl Block {
       }
     }
     new_coords
+  }
+
+  pub fn clockwise_rotation(&self) -> [Coord; 4] {
+    self.rotation(true)
+  }
+  pub fn counterclockwise_rotation(&self) -> [Coord; 4] {
+    self.rotation(false)
   }
 
   pub fn new() -> Block {
