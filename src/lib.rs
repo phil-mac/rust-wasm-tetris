@@ -8,14 +8,12 @@ use coord::Coord;
 
 use wasm_bindgen::prelude::*;
 
-// When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
-// allocator.
 #[cfg(feature = "wee_alloc")]
 #[global_allocator]
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
 extern crate web_sys;
-// A macro to provide `println!(..)`-style syntax for `console.log` logging.
+
 macro_rules! log {
     ( $( $t:tt )* ) => {
         web_sys::console::log_1(&format!( $( $t )* ).into());
@@ -57,12 +55,6 @@ impl Board {
         ((coord.y - 1) * self.width + (coord.x - 1)) as usize
     }
 
-    // fn drop_new_block(&mut self) {
-    //     self.block.coords = starting_coords();
-    //     self.block.prev_coords = starting_coords();
-    // }
-
-    // aka (if there are any On's in it, or out of bounds - skipping checks of current coords)
     fn is_position_allowed(&self, new_position: [Coord; 4]) -> bool {
         for index in 0..=3 {
             // not allowed if position out of bounds
@@ -246,7 +238,10 @@ impl Board {
     pub fn attempt_move_block_right(&mut self) {
         self.attempt_move(self.block.translation(right));
     }
-    pub fn attempt_rotate(&mut self) {
-        self.attempt_move(self.block.rotation());
+    pub fn attempt_rotate_clockwise(&mut self) {
+        self.attempt_move(self.block.rotation(true));
+    }
+    pub fn attempt_rotate_counterclockwise(&mut self) {
+        self.attempt_move(self.block.rotation(false));
     }
 }

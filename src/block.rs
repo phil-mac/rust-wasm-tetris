@@ -1,6 +1,5 @@
 use crate::cell::Cell;
 use crate::coord::Coord;
-// use rand::Rng;
 
 pub struct Block {
   pub coords: [Coord; 4],
@@ -32,19 +31,26 @@ impl Block {
     new_coords
   }
 
-  pub fn rotation(&self) -> [Coord; 4] {
+  pub fn rotation(&self, clockwise: bool) -> [Coord; 4] {
     let mut new_coords = null_coords();
 
     let x_pivot = self.coords[0].x;
     let y_pivot = self.coords[0].y;
 
-    for index in 0..=4 {
+    for index in 0..=3 {
       let x_delta = self.coords[index].x - x_pivot;
       let y_delta = self.coords[index].y - y_pivot;
 
-      new_coords[index] = Coord {
-        x: y_delta + x_pivot,
-        y: x_delta + y_pivot,
+      if clockwise {
+        new_coords[index] = Coord {
+          x: x_pivot - y_delta,
+          y: y_pivot + x_delta,
+        }
+      } else {
+        new_coords[index] = Coord {
+          x: x_pivot + y_delta,
+          y: y_pivot - x_delta,
+        }
       }
     }
     new_coords
@@ -118,9 +124,8 @@ impl Block {
     let block_templates = [
       t_block, j_block, z_block, o_block, s_block, l_block, i_block,
     ];
-    let rando = js_sys::Math::floor(js_sys::Math::random() * 6 as f64);
-    // let random_index = rand::thread_rng().gen_range(0..6);
-    let block_template = &block_templates[rando as usize];
+    let random_index = js_sys::Math::floor(js_sys::Math::random() * 7 as f64);
+    let block_template = &block_templates[random_index as usize];
     Block {
       coords: block_template.starting_coords,
       prev_coords: block_template.starting_coords,

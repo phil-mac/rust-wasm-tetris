@@ -1,9 +1,7 @@
 import { Board, Cell } from "rust-wasm-tetris-phil-mac";
 import { memory } from "rust-wasm-tetris-phil-mac/rust_wasm_tetris_phil_mac_bg";
 
-const log = content => console.log(content);
-
-const CELL_SIZE = 20;
+const CELL_SIZE = 15;
 const GRID_COLOR = "#CCCCCC";
 const ON_COLOR1 = "#FF0000";
 const ON_COLOR2 = "#00FF00";
@@ -102,11 +100,11 @@ document.addEventListener('keydown', function(event) {
     drawCells();
   }
   else if(event.keyCode == 88) { // x key
-    board.attempt_rotate();
+    board.attempt_rotate_clockwise();
     drawCells();
   }
   else if(event.keyCode == 90) { // z key
-    board.attempt_rotate();
+    board.attempt_rotate_counterclockwise();
     drawCells();
   }
 });
